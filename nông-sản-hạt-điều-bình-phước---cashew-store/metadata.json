@@ -1,0 +1,6 @@
+{
+  "name": "Nông Sản Hạt Điều Bình Phước - Cashew Store",
+  "description": "Cửa hàng hạt điều xuất khẩu Bình Phước - Hạt điều rang muối, tẩm vị, quà biếu cao cấp với giao diện mua hàng thân thiện và tư vấn AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
