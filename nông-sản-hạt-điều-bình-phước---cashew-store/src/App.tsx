@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { Header } from './components/Header';
 import { HeroBanner } from './components/HeroBanner';
+import { HomeIntroSection } from './components/HomeIntroSection';
 import { ProductCard } from './components/ProductCard';
+import { ProductTypeSelector } from './components/ProductTypeSelector';
+import { TechnicalSpecTable } from './components/TechnicalSpecTable';
+import { DownloadSourceModal } from './components/DownloadSourceModal';
+import { AboutEnaGreen } from './components/AboutEnaGreen';
 import { ProductDetailModal } from './components/ProductDetailModal';
 import { CartDrawer } from './components/CartDrawer';
 import { CheckoutModal } from './components/CheckoutModal';
@@ -15,24 +20,29 @@ import { Footer } from './components/Footer';
 import { PRODUCTS } from './data/products';
 import { CATEGORIES } from './data/categories';
 import { BLOG_POSTS } from './data/blog';
-import { Product, CartItem, WeightOption, Order, Coupon } from './types';
-import { Filter, Sparkles, Award, ShieldCheck, Flame } from 'lucide-react';
+import { TRANSLATIONS } from './data/translations';
+import { Product, CartItem, WeightOption, Order, Coupon, Language, ProductTypeFolder, ViewMode } from './types';
+import { Filter, Sparkles, Award, ShieldCheck, Flame, LayoutGrid, Table, Download, Folder } from 'lucide-react';
 
 export default function App() {
-  // Navigation & Filter state
+  // Navigation, Language & Filter state
   const [activeTab, setActiveTab] = useState<string>('shop');
+  const [language, setLanguage] = useState<Language>('vi');
+  const [selectedProductType, setSelectedProductType] = useState<ProductTypeFolder | 'all'>('all');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProcessingFilter, setSelectedProcessingFilter] = useState<string>('all');
   const [priceSort, setPriceSort] = useState<'asc' | 'desc' | 'popular'>('popular');
 
+  const t = TRANSLATIONS[language];
+
   // Cart state
   const [cart, setCart] = useState<CartItem[]>([
-    // Initial sample item
     {
-      id: 'hd-rang-muoi-vo-lua_500g',
+      id: 'raw-w180_500g',
       product: PRODUCTS[0],
       selectedWeight: '500g',
-      unitPrice: 155000,
+      unitPrice: 165000,
       quantity: 1,
     },
   ]);
@@ -44,6 +54,7 @@ export default function App() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
@@ -95,23 +106,36 @@ export default function App() {
     setCompletedOrder(newOrder);
   };
 
+  // Product Counts for 3 Types
+  const productCounts = {
+    all: PRODUCTS.length,
+    raw_cashew: PRODUCTS.filter((p) => p.productType === 'raw_cashew').length,
+    spiced_cashew: PRODUCTS.filter((p) => p.productType === 'spiced_cashew').length,
+    spices: PRODUCTS.filter((p) => p.productType === 'spices').length,
+    dried_fruit: PRODUCTS.filter((p) => p.productType === 'dried_fruit').length,
+    other_nuts: PRODUCTS.filter((p) => p.productType === 'other_nuts').length,
+  };
+
   // Filtered Products Calculation
   const filteredProducts = PRODUCTS.filter((p) => {
-    // Tab filter
-    if (activeTab !== 'shop' && activeTab !== 'recipes' && activeTab !== 'blog') {
-      if (p.categoryId !== activeTab) return false;
+    // 3 Main Product Types Filter (Folder Selector)
+    if (selectedProductType !== 'all') {
+      if (p.productType !== selectedProductType) return false;
     }
+
     // Processing Method filter
     if (selectedProcessingFilter !== 'all') {
       if (p.processingMethod !== selectedProcessingFilter) return false;
     }
+
     // Search query
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      const matchName = p.name.toLowerCase().includes(q);
+      const matchNameVi = p.name.toLowerCase().includes(q);
+      const matchNameEn = p.nameEn.toLowerCase().includes(q);
       const matchTags = p.tags.some((t) => t.toLowerCase().includes(q));
       const matchDesc = p.shortDescription.toLowerCase().includes(q);
-      if (!matchName && !matchTags && !matchDesc) return false;
+      if (!matchNameVi && !matchNameEn && !matchTags && !matchDesc) return false;
     }
     return true;
   }).sort((a, b) => {
@@ -124,7 +148,7 @@ export default function App() {
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
-    <div className="min-h-screen bg-stone-100/70 text-stone-900 font-sans antialiased flex flex-col justify-between">
+    <div className="min-h-screen bg-stone-100/80 text-stone-900 font-sans antialiased flex flex-col justify-between">
       {/* Header */}
       <Header
         cartCount={cartCount}
@@ -132,8 +156,13 @@ export default function App() {
         onOpenCart={() => setIsCartOpen(true)}
         onOpenAIModal={() => setIsAIModalOpen(true)}
         onOpenOrderLookup={() => setIsOrderLookupOpen(true)}
+        onOpenDownloadModal={() => setIsDownloadModalOpen(true)}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        selectedProductType={selectedProductType}
+        setSelectedProductType={setSelectedProductType}
+        language={language}
+        onLanguageChange={setLanguage}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
         products={PRODUCTS}
@@ -142,51 +171,37 @@ export default function App() {
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 space-y-8">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 space-y-8">
         {/* Hero Section */}
         {activeTab === 'shop' && (
-          <HeroBanner
-            onOpenAIModal={() => setIsAIModalOpen(true)}
-            onSelectCategory={(catId) => setActiveTab(catId)}
+          <>
+            <HeroBanner
+              onOpenAIModal={() => setIsAIModalOpen(true)}
+              onSelectCategory={() => setActiveTab('shop')}
+              language={language}
+            />
+            <HomeIntroSection
+              language={language}
+              onSelectCategory={() => setActiveTab('shop')}
+              onOpenAIModal={() => setIsAIModalOpen(true)}
+            />
+          </>
+        )}
+
+        {/* 3 Main Product Category Selector Folders */}
+        {activeTab === 'shop' && (
+          <ProductTypeSelector
+            selectedType={selectedProductType}
+            onSelectType={(type) => setSelectedProductType(type)}
+            language={language}
+            productCounts={productCounts}
           />
         )}
 
-        {/* Categories Bar */}
-        {activeTab === 'shop' && (
-          <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-extrabold text-stone-900 tracking-tight">
-                Danh Mục Hạt Điều Bình Phước
-              </h2>
-              <span className="text-xs text-stone-500 font-medium">100% Thu hoạch chính gốc Bù Đăng</span>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-              {CATEGORIES.map((cat) => (
-                <div
-                  key={cat.id}
-                  onClick={() => setActiveTab(cat.id)}
-                  className="group relative bg-white rounded-2xl p-3.5 border border-stone-200/80 shadow-xs hover:shadow-md cursor-pointer transition-all flex items-center gap-3 overflow-hidden"
-                >
-                  <img
-                    src={cat.image}
-                    alt={cat.name}
-                    className="w-12 h-12 rounded-xl object-cover group-hover:scale-105 transition-transform"
-                  />
-                  <div>
-                    <h3 className="font-bold text-xs text-stone-900 group-hover:text-amber-800 transition-colors">
-                      {cat.name}
-                    </h3>
-                    <p className="text-[10px] text-stone-400 font-medium">{cat.count} loại sản phẩm</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
         {/* View Content based on activeTab */}
-        {activeTab === 'recipes' ? (
+        {activeTab === 'about' ? (
+          <AboutEnaGreen language={language} />
+        ) : activeTab === 'recipes' ? (
           <div className="space-y-8">
             <SuaHatCalculator />
             <RecipeSection />
@@ -215,55 +230,80 @@ export default function App() {
             </div>
           </section>
         ) : (
-          /* Products Catalog View */
+          /* Products Catalog View with View Mode Toggle */
           <section className="space-y-6">
-            {/* Filter & Sorting Controls */}
-            <div className="bg-white rounded-2xl p-4 border border-stone-200 shadow-xs flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-2 text-xs font-bold text-stone-700">
-                <Filter className="w-4 h-4 text-amber-600" />
-                <span>Lọc chế biến:</span>
-                <select
-                  value={selectedProcessingFilter}
-                  onChange={(e) => setSelectedProcessingFilter(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl border border-stone-300 bg-stone-50 text-xs font-semibold focus:outline-hidden"
+            {/* Filter & View Mode Controls Bar */}
+            <div className="bg-white rounded-2xl p-4 border border-stone-200/90 shadow-xs flex flex-wrap items-center justify-between gap-4">
+              {/* Left: View Mode Toggle */}
+              <div className="flex items-center gap-1.5 bg-stone-100 p-1 rounded-xl">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
+                    viewMode === 'grid'
+                      ? 'bg-amber-600 text-white shadow-xs'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
                 >
-                  <option value="all">Tất cả phương pháp</option>
-                  <option value="Rang Củi Vỏ Lụa">Rang Củi Vỏ Lụa</option>
-                  <option value="Rang Muối Tách Vỏ">Rang Muối Tách Vỏ</option>
-                  <option value="Tẩm Vị Tỏi Ớt">Tẩm Tỏi Ớt</option>
-                  <option value="Tẩm Mật Ong">Tẩm Mật Ong</option>
-                  <option value="Nguyên Vị Tự Nhiên">Nguyên Vị (Nấu sữa)</option>
-                  <option value="Hộp Quà Biếu">Hộp Quà Biếu</option>
-                </select>
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  <span>{t.viewModeGrid}</span>
+                </button>
+
+                <button
+                  onClick={() => setViewMode('table')}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 ${
+                    viewMode === 'table'
+                      ? 'bg-amber-600 text-white shadow-xs'
+                      : 'text-stone-600 hover:text-stone-900'
+                  }`}
+                >
+                  <Table className="w-3.5 h-3.5" />
+                  <span>{t.viewModeTable}</span>
+                </button>
               </div>
 
-              <div className="flex items-center gap-2 text-xs font-bold text-stone-700">
-                <span>Sắp xếp:</span>
-                <select
-                  value={priceSort}
-                  onChange={(e: any) => setPriceSort(e.target.value)}
-                  className="px-3 py-1.5 rounded-xl border border-stone-300 bg-stone-50 text-xs font-semibold focus:outline-hidden"
-                >
-                  <option value="popular">Bán chạy & Yêu thích nhất</option>
-                  <option value="asc">Giá: Thấp đến Cao</option>
-                  <option value="desc">Giá: Cao đến Thấp</option>
-                </select>
+              {/* Right: Sort and Filter */}
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-stone-700">
+                  <Filter className="w-4 h-4 text-amber-600" />
+                  <span>{t.sortBy}</span>
+                  <select
+                    value={priceSort}
+                    onChange={(e: any) => setPriceSort(e.target.value)}
+                    className="px-3 py-1.5 rounded-xl border border-stone-300 bg-stone-50 text-xs font-semibold focus:outline-hidden"
+                  >
+                    <option value="popular">{t.sortPopular}</option>
+                    <option value="asc">{t.sortPriceAsc}</option>
+                    <option value="desc">{t.sortPriceDesc}</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            {/* Product Grid */}
+            {/* Display products according to view mode */}
             {filteredProducts.length === 0 ? (
               <div className="bg-white rounded-2xl p-12 text-center text-stone-400 space-y-2 border border-stone-200">
                 <div className="text-4xl">🌰</div>
-                <h3 className="font-bold text-stone-700">Không tìm thấy sản phẩm hạt điều phù hợp!</h3>
-                <p className="text-xs">Vui lòng chọn lại bộ lọc hoặc tìm từ khóa khác.</p>
+                <h3 className="font-bold text-stone-700">
+                  {language === 'vi' ? 'Không tìm thấy sản phẩm phù hợp!' : 'No products found matching your search!'}
+                </h3>
+                <p className="text-xs">
+                  {language === 'vi' ? 'Vui lòng chọn lại thư mục hoặc tìm từ khóa khác.' : 'Please select a different category or change search criteria.'}
+                </p>
               </div>
+            ) : viewMode === 'table' ? (
+              <TechnicalSpecTable
+                products={filteredProducts}
+                language={language}
+                onSelectProduct={(p) => setSelectedProduct(p)}
+                onAddToCart={(prod, weight) => handleAddToCart(prod, weight)}
+              />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {filteredProducts.map((p) => (
                   <ProductCard
                     key={p.id}
                     product={p}
+                    language={language}
                     onAddToCart={(prod, weight) => handleAddToCart(prod, weight)}
                     onOpenDetail={(prod) => setSelectedProduct(prod)}
                   />
@@ -281,17 +321,26 @@ export default function App() {
       <Footer
         onSelectCategory={(catId) => setActiveTab(catId)}
         onOpenAIModal={() => setIsAIModalOpen(true)}
+        onOpenDownloadModal={() => setIsDownloadModalOpen(true)}
+        language={language}
       />
 
       {/* Modals & Slide-overs */}
       <ProductDetailModal
         product={selectedProduct}
+        language={language}
         onClose={() => setSelectedProduct(null)}
         onAddToCart={(prod, weight, qty) => {
           handleAddToCart(prod, weight, qty);
           setSelectedProduct(null);
           setIsCartOpen(true);
         }}
+      />
+
+      <DownloadSourceModal
+        isOpen={isDownloadModalOpen}
+        onClose={() => setIsDownloadModalOpen(false)}
+        language={language}
       />
 
       <CartDrawer

@@ -1,12 +1,61 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
+
+    <!-- ================================================================= -->
+    <!-- 1. TIÊU ĐỀ & MÔ TẢ TRANG WEB (WEBSITE TITLE & SEO METADATA)      -->
+    <!-- Chỉnh sửa tiêu đề và mô tả sản phẩm/thương hiệu ở đây             -->
+    <!-- ================================================================= -->
+    <title>Nông Sản Hạt Điều Bình Phước - ENA GREEN CO., LTD</title>
+    <meta 
+      name="description" 
+      content="Chuyên cung cấp Hạt điều rang muối Bình Phước W180, W240, W320, Hạt điều tẩm vị và Trái cây sấy dẻo cao cấp đạt chuẩn xuất khẩu ISO, HACCP, FDA." 
+    />
+    <meta name="keywords" content="hạt điều Bình Phước, hạt điều rang muối, hạt điều tẩm vị, trái cây sấy dẻo, ENA GREEN, cashew nuts, export cashew" />
+    <meta name="author" content="ENA GREEN CO., LTD" />
+
+    <!-- ================================================================= -->
+    <!-- 2. BIỂU TƯỢNG FAVICON (WEBSITE ICON)                              -->
+    <!-- Dễ dàng thay đổi emoji hoặc đường dẫn ảnh đại diện tab trình duyệt -->
+    <!-- ================================================================= -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌰</text></svg>" />
+
+    <!-- ================================================================= -->
+    <!-- 3. HÌNH ẢNH VÀ THÔNG TIN KHI CHIA SẺ TRÊN BÀI ĐĂNG (OPEN GRAPH)  -->
+    <!-- Đổi URL tại content="" trong og:image để chỉnh ảnh xem trước link -->
+    <!-- ================================================================= -->
+    <meta property="og:title" content="Nông Sản Hạt Điều Bình Phước - ENA GREEN Cashew Store" />
+    <meta property="og:description" content="Thương hiệu hạt điều rang củi, hạt điều tẩm vị & trái cây sấy dẻo Bình Phước xuất khẩu đạt chuẩn ISO/HACCP." />
+    <meta property="og:image" content="https://images.unsplash.com/photo-1543339308-43e59d6b73a6?auto=format&fit=crop&w=1200&q=80" />
+    <meta property="og:type" content="website" />
+
+    <!-- ================================================================= -->
+    <!-- 4. PHÔNG CHỮ CHUẨN & CSS CƠ BẢN (FONTS & SIMPLE CSS STYLES)        -->
+    <!-- ================================================================= -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+      /* Kiểu dáng nền và phông chữ cơ bản cho trang */
+      body {
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        background-color: #f5f5f4;
+        color: #1c1917;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
   </head>
   <body>
+    <!-- ================================================================= -->
+    <!-- 5. KHUNG HIỂN THỊ CHÍNH CHO ỨNG DỤNG REACT                        -->
+    <!-- ================================================================= -->
     <div id="root"></div>
+
+    <!-- Tải script chính của giao diện -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

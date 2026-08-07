@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { ShoppingBag, Search, Sparkles, Heart, PhoneCall, Truck, ChevronRight, Menu, X, PackageCheck } from 'lucide-react';
-import { Product } from '../types';
+import { ShoppingBag, Search, Sparkles, PhoneCall, Truck, ChevronRight, Menu, X, PackageCheck, Download, Code, Building2, Folder, ShieldCheck } from 'lucide-react';
+import { Product, Language, ProductTypeFolder } from '../types';
+import { TRANSLATIONS } from '../data/translations';
+import { LanguageToggle } from './LanguageToggle';
 
 interface HeaderProps {
   cartCount: number;
@@ -8,8 +10,13 @@ interface HeaderProps {
   onOpenCart: () => void;
   onOpenAIModal: () => void;
   onOpenOrderLookup: () => void;
+  onOpenDownloadModal: () => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
+  selectedProductType: ProductTypeFolder | 'all';
+  setSelectedProductType: (type: ProductTypeFolder | 'all') => void;
+  language: Language;
+  onLanguageChange: (lang: Language) => void;
   searchQuery: string;
   setSearchQuery: (q: string) => void;
   products: Product[];
@@ -23,21 +30,27 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCart,
   onOpenAIModal,
   onOpenOrderLookup,
+  onOpenDownloadModal,
   activeTab,
   setActiveTab,
+  selectedProductType,
+  setSelectedProductType,
+  language,
+  onLanguageChange,
   searchQuery,
   setSearchQuery,
   products,
   onSelectProduct,
-  favoriteCount,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const t = TRANSLATIONS[language];
 
   const searchResults = searchQuery.trim()
     ? products.filter(
         (p) =>
           p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.nameEn.toLowerCase().includes(searchQuery.toLowerCase()) ||
           p.tags.some((t) => t.toLowerCase().includes(searchQuery.toLowerCase())) ||
           p.processingMethod.toLowerCase().includes(searchQuery.toLowerCase())
       ).slice(0, 5)
@@ -45,21 +58,21 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="sticky top-0 z-40 bg-white shadow-xs border-b border-amber-100/60">
-      {/* Top Banner Notice */}
-      <div className="bg-gradient-to-r from-amber-800 via-amber-700 to-amber-900 text-amber-50 text-xs py-2 px-4">
+      {/* Top Banner Notice with Language Switcher */}
+      <div className="bg-gradient-to-r from-amber-950 via-amber-900 to-stone-900 text-amber-50 text-xs py-2 px-4">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 text-center sm:text-left">
           <div className="flex items-center gap-2 font-medium">
             <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-            <span>🔥 100% Hạt điều rang củi chính gốc Bình Phước - Tươi mới mỗi ngày</span>
+            <span>{t.topNotice}</span>
           </div>
-          <div className="flex items-center gap-4 text-amber-100/90 text-[11px]">
-            <span className="flex items-center gap-1">
-              <Truck className="w-3.5 h-3.5" /> Miễn phí giao hàng từ 300K
+
+          <div className="flex items-center gap-3">
+            <span className="hidden md:flex items-center gap-1 text-[11px] text-amber-200">
+              <Truck className="w-3.5 h-3.5" /> {t.freeShippingNotice}
             </span>
-            <span className="hidden md:inline">|</span>
-            <span className="hidden md:flex items-center gap-1">
-              <PhoneCall className="w-3.5 h-3.5" /> Hotline/Zalo Sỉ & Lẻ: 0988.234.567
-            </span>
+            <span className="hidden md:inline text-amber-600">|</span>
+            {/* Language Switcher */}
+            <LanguageToggle language={language} onLanguageChange={onLanguageChange} />
           </div>
         </div>
       </div>
@@ -78,29 +91,32 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             <div
-              onClick={() => setActiveTab('shop')}
+              onClick={() => {
+                setActiveTab('shop');
+                setSelectedProductType('all');
+              }}
               className="cursor-pointer flex items-center gap-2.5 group"
             >
-              <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-xl shadow-md group-hover:scale-105 transition-transform">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center font-bold text-2xl shadow-md group-hover:scale-105 transition-transform">
                 🌰
               </div>
               <div>
-                <h1 className="text-lg sm:text-xl font-bold text-stone-900 tracking-tight leading-tight group-hover:text-amber-800 transition-colors">
-                  HẠT ĐIỀU <span className="text-amber-600">BÌNH PHƯỚC</span>
+                <h1 className="text-lg sm:text-xl font-black text-stone-900 tracking-tight leading-tight group-hover:text-amber-800 transition-colors">
+                  {t.brandTitle}
                 </h1>
-                <p className="text-[10px] text-stone-500 uppercase tracking-wider font-semibold">
-                  Đặc Sản Nông Sản Thượng Hạng
+                <p className="text-[9px] sm:text-[10px] text-amber-700 font-extrabold tracking-wider uppercase">
+                  {t.brandSub}
                 </p>
               </div>
             </div>
           </div>
 
           {/* Search Bar */}
-          <div className="hidden md:block flex-1 max-w-lg relative">
+          <div className="hidden md:block flex-1 max-w-md relative">
             <div className="relative">
               <input
                 type="text"
-                placeholder="Tìm hạt điều rang muối, tỏi ớt, làm sữa..."
+                placeholder={t.searchPlaceholder}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
@@ -121,9 +137,6 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Live Search Dropdown */}
             {isSearchFocused && searchResults.length > 0 && (
               <div className="absolute top-full mt-2 left-0 right-0 bg-white rounded-2xl shadow-xl border border-stone-100 p-2 z-50 divide-y divide-stone-100">
-                <div className="p-2 text-xs font-semibold text-stone-400 uppercase tracking-wider">
-                  Gợi ý sản phẩm phù hợp
-                </div>
                 {searchResults.map((p) => (
                   <div
                     key={p.id}
@@ -139,7 +152,9 @@ export const Header: React.FC<HeaderProps> = ({
                       className="w-10 h-10 object-cover rounded-lg"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-stone-800 truncate">{p.name}</p>
+                      <p className="text-xs font-medium text-stone-800 truncate">
+                        {language === 'vi' ? p.name : p.nameEn}
+                      </p>
                       <p className="text-[11px] text-amber-700 font-semibold">
                         {p.price.toLocaleString('vi-VN')}đ / 500g
                       </p>
@@ -151,24 +166,26 @@ export const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* Action Icons */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          {/* Action Header Buttons */}
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Download Code Button (User Request: "Tải toàn bộ file về") */}
+            <button
+              type="button"
+              onClick={onOpenDownloadModal}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold shadow-xs transition-all transform hover:-translate-y-0.5"
+              title={t.downloadCode}
+            >
+              <Download className="w-3.5 h-3.5 text-emerald-200" />
+              <span className="hidden sm:inline">{t.downloadCodeShort}</span>
+            </button>
+
             {/* AI Assistant Button */}
             <button
               onClick={onOpenAIModal}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-semibold shadow-xs hover:shadow-md transition-all transform hover:-translate-y-0.5"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold shadow-xs transition-all"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-200 animate-spin-slow" />
-              <span className="hidden sm:inline">AI Tư Vấn</span>
-            </button>
-
-            {/* Order Lookup Button */}
-            <button
-              onClick={onOpenOrderLookup}
-              className="p-2 text-stone-600 hover:text-amber-700 hover:bg-stone-100 rounded-full transition-colors relative"
-              title="Tra cứu đơn hàng"
-            >
-              <PackageCheck className="w-5 h-5" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-200" />
+              <span className="hidden sm:inline">{t.aiConsultant}</span>
             </button>
 
             {/* Cart Button */}
@@ -178,7 +195,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <ShoppingBag className="w-5 h-5 text-amber-700" />
               <div className="hidden sm:flex flex-col items-start leading-tight">
-                <span className="text-[10px] text-stone-500 uppercase font-semibold">Giỏ hàng</span>
+                <span className="text-[10px] text-stone-500 uppercase font-semibold">{t.cart}</span>
                 <span className="text-xs font-bold text-amber-800">
                   {cartTotal > 0 ? `${cartTotal.toLocaleString('vi-VN')}đ` : '0đ'}
                 </span>
@@ -192,167 +209,172 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Navigation Tabs Bar */}
-        <nav className="hidden lg:flex items-center gap-1 mt-3 pt-2 border-t border-stone-100 text-xs font-medium text-stone-600">
-          <button
-            onClick={() => setActiveTab('shop')}
-            className={`px-3.5 py-1.5 rounded-lg transition-colors ${
-              activeTab === 'shop'
-                ? 'bg-amber-700 text-white font-semibold shadow-xs'
-                : 'hover:bg-amber-50 hover:text-amber-800'
-            }`}
-          >
-            🏪 Tát Cả Sản Phẩm
-          </button>
-          <button
-            onClick={() => setActiveTab('rang-muoi')}
-            className={`px-3.5 py-1.5 rounded-lg transition-colors ${
-              activeTab === 'rang-muoi'
-                ? 'bg-amber-700 text-white font-semibold shadow-xs'
-                : 'hover:bg-amber-50 hover:text-amber-800'
-            }`}
-          >
-            🥜 Hạt Điều Rang Muối
-          </button>
-          <button
-            onClick={() => setActiveTab('tam-vi')}
-            className={`px-3.5 py-1.5 rounded-lg transition-colors ${
-              activeTab === 'tam-vi'
-                ? 'bg-amber-700 text-white font-semibold shadow-xs'
-                : 'hover:bg-amber-50 hover:text-amber-800'
-            }`}
-          >
-            🌶️ Hạt Điều Tẩm Vị
-          </button>
-          <button
-            onClick={() => setActiveTab('nguyen-vi')}
-            className={`px-3.5 py-1.5 rounded-lg transition-colors ${
-              activeTab === 'nguyen-vi'
-                ? 'bg-amber-700 text-white font-semibold shadow-xs'
-                : 'hover:bg-amber-50 hover:text-amber-800'
-            }`}
-          >
-            🥛 Hạt Điều Nấu Sữa & Eatclean
-          </button>
-          <button
-            onClick={() => setActiveTab('qua-bieu')}
-            className={`px-3.5 py-1.5 rounded-lg transition-colors ${
-              activeTab === 'qua-bieu'
-                ? 'bg-amber-700 text-white font-semibold shadow-xs'
-                : 'hover:bg-amber-50 hover:text-amber-800'
-            }`}
-          >
-            🎁 Hộp Quà Biếu Sang Trọng
-          </button>
-          <button
-            onClick={() => setActiveTab('recipes')}
-            className={`px-3.5 py-1.5 rounded-lg transition-colors ${
-              activeTab === 'recipes'
-                ? 'bg-amber-700 text-white font-semibold shadow-xs'
-                : 'hover:bg-amber-50 hover:text-amber-800'
-            }`}
-          >
-            📖 Công Thức & Sữa Hạt
-          </button>
-          <button
-            onClick={() => setActiveTab('blog')}
-            className={`px-3.5 py-1.5 rounded-lg transition-colors ${
-              activeTab === 'blog'
-                ? 'bg-amber-700 text-white font-semibold shadow-xs'
-                : 'hover:bg-amber-50 hover:text-amber-800'
-            }`}
-          >
-            💡 Mẹo Hay & Kiến Thức
-          </button>
+        {/* Primary Navigation Bar (3 Product Folders + Company Pages) */}
+        <nav className="hidden lg:flex items-center justify-between gap-1 mt-3 pt-2 border-t border-stone-100 text-xs font-semibold text-stone-600">
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => {
+                setActiveTab('shop');
+                setSelectedProductType('all');
+              }}
+              className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${
+                activeTab === 'shop' && selectedProductType === 'all'
+                  ? 'bg-stone-900 text-white shadow-xs'
+                  : 'hover:bg-amber-50 hover:text-amber-800'
+              }`}
+            >
+              <span>🏪 {t.navShop}</span>
+            </button>
+
+            {/* 3 Main Product Category Folders Buttons */}
+            <button
+              onClick={() => {
+                setActiveTab('shop');
+                setSelectedProductType('raw_cashew');
+              }}
+              className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${
+                activeTab === 'shop' && selectedProductType === 'raw_cashew'
+                  ? 'bg-amber-700 text-white shadow-xs font-bold'
+                  : 'bg-amber-50/80 text-amber-950 hover:bg-amber-100'
+              }`}
+            >
+              <span>🌰 {t.navRawCashew}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('shop');
+                setSelectedProductType('spiced_cashew');
+              }}
+              className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${
+                activeTab === 'shop' && selectedProductType === 'spiced_cashew'
+                  ? 'bg-amber-700 text-white shadow-xs font-bold'
+                  : 'bg-amber-50/80 text-amber-950 hover:bg-amber-100'
+              }`}
+            >
+              <span>🌶️ {t.navSpicedCashew}</span>
+            </button>
+
+            <button
+              onClick={() => {
+                setActiveTab('shop');
+                setSelectedProductType('dried_fruit');
+              }}
+              className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${
+                activeTab === 'shop' && selectedProductType === 'dried_fruit'
+                  ? 'bg-amber-700 text-white shadow-xs font-bold'
+                  : 'bg-amber-50/80 text-amber-950 hover:bg-amber-100'
+              }`}
+            >
+              <span>🥭 {t.navDriedFruit}</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setActiveTab('about')}
+              className={`px-3 py-1.5 rounded-lg transition-colors ${
+                activeTab === 'about'
+                  ? 'bg-amber-800 text-white font-bold'
+                  : 'hover:bg-amber-50 text-stone-700'
+              }`}
+            >
+              🏢 {t.navAbout}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('recipes')}
+              className={`px-3 py-1.5 rounded-lg transition-colors ${
+                activeTab === 'recipes'
+                  ? 'bg-amber-800 text-white font-bold'
+                  : 'hover:bg-amber-50 text-stone-700'
+              }`}
+            >
+              📖 {t.navRecipes}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('blog')}
+              className={`px-3 py-1.5 rounded-lg transition-colors ${
+                activeTab === 'blog'
+                  ? 'bg-amber-800 text-white font-bold'
+                  : 'hover:bg-amber-50 text-stone-700'
+              }`}
+            >
+              💡 {t.navBlog}
+            </button>
+          </div>
         </nav>
       </div>
 
-      {/* Mobile Navigation Menu */}
+      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="lg:hidden bg-stone-50 border-t border-stone-200 px-4 py-3 space-y-2 text-sm">
-          <div className="mb-3">
-            <input
-              type="text"
-              placeholder="Tìm kiếm hạt điều..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-stone-300 text-sm bg-white"
-            />
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-xs font-bold text-stone-500 uppercase">{language === 'vi' ? 'Chọn Ngôn Ngữ:' : 'Select Language:'}</span>
+            <LanguageToggle language={language} onLanguageChange={onLanguageChange} />
           </div>
+
           <button
             onClick={() => {
               setActiveTab('shop');
+              setSelectedProductType('all');
               setIsMobileMenuOpen(false);
             }}
-            className="block w-full text-left py-2 px-3 rounded-lg hover:bg-stone-200 font-medium"
+            className="block w-full text-left py-2 px-3 rounded-lg hover:bg-stone-200 font-bold"
           >
-            🏪 Tất Cả Sản Phẩm
+            🏪 {t.navShop}
           </button>
           <button
             onClick={() => {
-              setActiveTab('rang-muoi');
+              setActiveTab('shop');
+              setSelectedProductType('raw_cashew');
+              setIsMobileMenuOpen(false);
+            }}
+            className="block w-full text-left py-2 px-3 rounded-lg hover:bg-stone-200 text-amber-900 font-semibold"
+          >
+            🌰 {t.navRawCashew}
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('shop');
+              setSelectedProductType('spiced_cashew');
+              setIsMobileMenuOpen(false);
+            }}
+            className="block w-full text-left py-2 px-3 rounded-lg hover:bg-stone-200 text-amber-900 font-semibold"
+          >
+            🌶️ {t.navSpicedCashew}
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('shop');
+              setSelectedProductType('dried_fruit');
+              setIsMobileMenuOpen(false);
+            }}
+            className="block w-full text-left py-2 px-3 rounded-lg hover:bg-stone-200 text-amber-900 font-semibold"
+          >
+            🥭 {t.navDriedFruit}
+          </button>
+
+          <button
+            onClick={() => {
+              setActiveTab('about');
               setIsMobileMenuOpen(false);
             }}
             className="block w-full text-left py-2 px-3 rounded-lg hover:bg-stone-200"
           >
-            🥜 Hạt Điều Rang Muối Củi
+            🏢 {t.navAbout}
           </button>
+
           <button
             onClick={() => {
-              setActiveTab('tam-vi');
+              onOpenDownloadModal();
               setIsMobileMenuOpen(false);
             }}
-            className="block w-full text-left py-2 px-3 rounded-lg hover:bg-stone-200"
+            className="block w-full text-left py-2 px-3 rounded-lg bg-emerald-100 text-emerald-900 font-bold"
           >
-            🌶️ Hạt Điều Tẩm Vị
+            📦 {t.downloadCode}
           </button>
-          <button
-            onClick={() => {
-              setActiveTab('nguyen-vi');
-              setIsMobileMenuOpen(false);
-            }}
-            className="block w-full text-left py-2 px-3 rounded-lg hover:bg-stone-200"
-          >
-            🥛 Hạt Điều Nấu Sữa & Eatclean
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('qua-bieu');
-              setIsMobileMenuOpen(false);
-            }}
-            className="block w-full text-left py-2 px-3 rounded-lg hover:bg-stone-200"
-          >
-            🎁 Hộp Quà Biếu Sang Trọng
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('recipes');
-              setIsMobileMenuOpen(false);
-            }}
-            className="block w-full text-left py-2 px-3 rounded-lg hover:bg-stone-200"
-          >
-            📖 Công Thức & Sữa Hạt
-          </button>
-          <button
-            onClick={() => {
-              setActiveTab('blog');
-              setIsMobileMenuOpen(false);
-            }}
-            className="block w-full text-left py-2 px-3 rounded-lg hover:bg-stone-200"
-          >
-            💡 Mẹo Hay & Kiến Thức
-          </button>
-          <div className="pt-2 border-t border-stone-200 flex items-center justify-between">
-            <button
-              onClick={() => {
-                onOpenOrderLookup();
-                setIsMobileMenuOpen(false);
-              }}
-              className="text-amber-800 font-semibold flex items-center gap-1.5"
-            >
-              <PackageCheck className="w-4 h-4" /> Tra Cứu Đơn Hàng
-            </button>
-          </div>
         </div>
       )}
     </header>

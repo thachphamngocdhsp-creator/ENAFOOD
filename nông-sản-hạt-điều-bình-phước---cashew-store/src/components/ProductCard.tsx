@@ -1,20 +1,24 @@
 import React, { useState } from 'react';
-import { Product, WeightOption } from '../types';
-import { Star, ShoppingCart, Eye, Check, ShieldAlert } from 'lucide-react';
+import { Product, WeightOption, Language } from '../types';
+import { Star, ShoppingCart, Eye, Check, ShieldCheck } from 'lucide-react';
+import { TRANSLATIONS } from '../data/translations';
 
 interface ProductCardProps {
   product: Product;
+  language: Language;
   onAddToCart: (product: Product, weight: WeightOption) => void;
   onOpenDetail: (product: Product) => void;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
+  language,
   onAddToCart,
   onOpenDetail,
 }) => {
+  const t = TRANSLATIONS[language];
   const [selectedWeight, setSelectedWeight] = useState<WeightOption>(
-    product.weights[1]?.weight || product.weights[0].weight
+    product.weights[0]?.weight
   );
   const [addedAnimation, setAddedAnimation] = useState(false);
 
@@ -27,6 +31,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     setAddedAnimation(true);
     setTimeout(() => setAddedAnimation(false), 1500);
   };
+
+  const name = language === 'vi' ? product.name : product.nameEn;
+  const shortDesc = language === 'vi' ? product.shortDescription : product.shortDescriptionEn;
+  const origin = language === 'vi' ? product.origin : product.originEn;
 
   const discountPercent = currentWeightOption.originalPrice
     ? Math.round(
@@ -45,7 +53,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div className="relative aspect-4/3 overflow-hidden bg-stone-100">
         <img
           src={product.images[0]}
-          alt={product.name}
+          alt={name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
         />
@@ -54,11 +62,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1 z-10">
           {product.isBestSeller && (
             <span className="bg-amber-600 text-white font-bold text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-md shadow-xs">
-              🔥 Bán Chạy
+              🔥 {language === 'vi' ? 'Bán Chạy' : 'Best Seller'}
             </span>
           )}
           {product.grade && (
-            <span className="bg-stone-900/80 text-amber-300 font-semibold text-[10px] px-2 py-0.5 rounded-md backdrop-blur-xs">
+            <span className="bg-stone-900/90 text-amber-300 font-extrabold text-[10px] px-2 py-0.5 rounded-md backdrop-blur-xs">
               {product.grade}
             </span>
           )}
@@ -76,7 +84,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             onOpenDetail(product);
           }}
           className="absolute bottom-2.5 right-2.5 p-2 bg-white/90 hover:bg-white text-stone-700 rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"
-          title="Xem nhanh chi tiết"
+          title={t.viewDetails}
         >
           <Eye className="w-4 h-4" />
         </button>
@@ -88,7 +96,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {/* Origin & Rating */}
           <div className="flex items-center justify-between text-xs text-stone-500 mb-1">
             <span className="truncate max-w-[150px] font-medium text-amber-800">
-              📍 {product.origin.split(',')[0]}
+              📍 {origin.split(',')[0]}
             </span>
             <div className="flex items-center gap-1 font-semibold text-amber-600">
               <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
@@ -99,20 +107,30 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
           {/* Title */}
           <h3 className="font-bold text-stone-900 text-sm sm:text-base line-clamp-2 group-hover:text-amber-800 transition-colors leading-snug">
-            {product.name}
+            {name}
           </h3>
 
           <p className="text-xs text-stone-500 line-clamp-2 mt-1 font-light leading-relaxed">
-            {product.shortDescription}
+            {shortDesc}
           </p>
+
+          {/* Specs Highlights */}
+          <div className="flex flex-wrap items-center gap-1.5 mt-2">
+            <span className="text-[10px] bg-stone-100 text-stone-700 font-semibold px-2 py-0.5 rounded-md">
+              💧 {t.moisture}: {product.specifications.moisture}
+            </span>
+            <span className="text-[10px] bg-amber-50 text-amber-900 font-semibold px-2 py-0.5 rounded-md">
+              🛡️ {product.specifications.certifications[0]}
+            </span>
+          </div>
         </div>
 
         {/* Weight Selector Pills */}
         <div className="pt-1">
-          <div className="text-[11px] font-semibold text-stone-400 mb-1.5 uppercase tracking-wider">
-            Chọn trọng lượng:
+          <div className="text-[10px] font-bold text-stone-400 mb-1 uppercase tracking-wider">
+            {t.weightOptions}:
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1">
             {product.weights.map((w) => (
               <button
                 key={w.weight}
@@ -120,9 +138,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   e.stopPropagation();
                   setSelectedWeight(w.weight);
                 }}
-                className={`text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all ${
+                className={`text-[10px] font-bold px-2 py-0.5 rounded-md border transition-all ${
                   selectedWeight === w.weight
-                    ? 'border-amber-600 bg-amber-50 text-amber-900 shadow-xs'
+                    ? 'border-amber-600 bg-amber-50 text-amber-900 shadow-2xs'
                     : 'border-stone-200 text-stone-600 hover:border-stone-300 bg-white'
                 }`}
               >
@@ -147,23 +165,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
           <button
             onClick={handleQuickAdd}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs ${
               addedAnimation
                 ? 'bg-emerald-600 text-white'
                 : 'bg-amber-600 hover:bg-amber-700 text-white'
             }`}
           >
-            {addedAnimation ? (
-              <>
-                <Check className="w-3.5 h-3.5" />
-                <span>Đã Thêm!</span>
-              </>
-            ) : (
-              <>
-                <ShoppingCart className="w-3.5 h-3.5" />
-                <span>Chọn Mua</span>
-              </>
-            )}
+            {addedAnimation ? <Check className="w-3.5 h-3.5" /> : <ShoppingCart className="w-3.5 h-3.5" />}
+            <span>{addedAnimation ? (language === 'vi' ? 'Đã Thêm!' : 'Added!') : t.addToCart}</span>
           </button>
         </div>
       </div>
